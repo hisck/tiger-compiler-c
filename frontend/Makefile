@@ -1,19 +1,22 @@
 # variable
 OBJECTS = lex.yy.o y.tab.o errormsg.o util.o absyn.o prabsyn.o symbol.o \
-          table.o parse.o
+          table.o parse.o env.o semant.o types.o
 
 # executable
-all: lextest parsetest absyntest
+all: lextest parsetest absyntest typechecktest
 .PHONY: all
 
 lextest: lextest.o $(OBJECTS)
-	cc -g -o $@ lextest.o $(OBJECTS)
+	cc -g -o $@.out lextest.o $(OBJECTS)
 
 parsetest: parsetest.o $(OBJECTS)
-	cc -g -o $@ parsetest.o $(OBJECTS)
+	cc -g -o $@.out parsetest.o $(OBJECTS)
 
 absyntest: absyntest.o $(OBJECTS)
-	cc -g -o $@ absyntest.o $(OBJECTS)
+	cc -g -o $@.out absyntest.o $(OBJECTS)
+
+typechecktest: typechecktest.o $(OBJECTS)
+	cc -o $@.out typechecktest.o $(OBJECTS) -g
 
 # objects
 errormsg.o: errormsg.c errormsg.h util.h
@@ -41,6 +44,12 @@ y.tab.h: y.tab.c
 # absyn
 absyntest.o: absyntest.c errormsg.h util.h absyn.h symbol.h parse.h prabsyn.h
 
+# type-check
+typechecktest.o: typechecktest.c errormsg.h util.h absyn.h symbol.h
+env.o: env.c env.h
+semant.o: semant.c semant.h
+types.o: types.c types.h
+
 .PHONY: clean
 clean:
-	rm -f *.o a.out lextest parsetest absyntest lex.yy.c y.output y.tab.c y.tab.h
+	rm -f *.o *.out lex.yy.c y.output y.tab.c y.tab.h
