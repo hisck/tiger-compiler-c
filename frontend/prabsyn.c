@@ -125,6 +125,13 @@ void pr_exp(FILE *out, A_exp v, int d) {
       pr_exp(out, v->u.whilee.body, d + 1);
       fprintf(out, ")\n");
       break;
+    case A_doWhileExp:
+      fprintf(out, "doWhileExp(\n");
+      pr_exp(out, v->u.whilee.body, d + 1);
+      fprintf(out, ",\n");
+      pr_exp(out, v->u.whilee.test, d + 1);
+      fprintf(out, ")\n");
+      break;
     case A_forExp:
       fprintf(out, "forExp(%s,\n", S_name(v->u.forr.var));
       pr_exp(out, v->u.forr.lo, d + 1);
