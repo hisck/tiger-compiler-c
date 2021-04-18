@@ -2,9 +2,11 @@
 #include <stdlib.h>
 
 #include "errormsg.h"
+#include "parse.h"
 #include "util.h"
 
 extern int yyparse(void);
+extern A_exp absyn_root;
 
 void parseT(string fname) {
   EM_reset(fname);
