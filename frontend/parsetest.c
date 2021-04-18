@@ -6,7 +6,7 @@
 
 extern int yyparse(void);
 
-void parse(string fname) {
+void parseT(string fname) {
   EM_reset(fname);
   if (yyparse() == 0) /* parsing worked */
     fprintf(stderr, "Parsing successful!\n");
@@ -19,6 +19,6 @@ int main(int argc, char **argv) {
     fprintf(stderr, "usage: a.out filename\n");
     exit(1);
   }
-  parse(argv[1]);
+  parseT(argv[1]);
   return 0;
 }

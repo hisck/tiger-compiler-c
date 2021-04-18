@@ -2,6 +2,7 @@
 #define UTIL_H__
 
 #include <assert.h>
+#include <stdio.h>
 
 typedef char *string;
 typedef char bool;
