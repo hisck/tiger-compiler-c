@@ -1,7 +1,7 @@
 #ifndef ERRORMSG_H__
 #define ERRORMSG_H__
 
-#include "../util/util.h"
+#include "util.h"
 
 extern bool EM_anyErrors;
 
