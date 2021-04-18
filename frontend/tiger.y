@@ -83,7 +83,6 @@ program: exp { absyn_root = $1; }
 
 exp: lvalue { $$ = A_VarExp(EM_tokPos, $1); }
    | NIL    { $$ = A_NilExp(EM_tokPos); }
-   | LPAREN RPAREN { $$ = A_SeqExp(EM_tokPos, NULL); }
    | INT           { $$ = A_IntExp(EM_tokPos, $1); }
    | STRING        { $$ = A_StringExp(EM_tokPos, $1); }
    | MINUS exp %prec UMINUS { $$ = A_OpExp(EM_tokPos, A_minusOp, A_IntExp(EM_tokPos, 0), $2); }
@@ -176,5 +175,6 @@ fundeclist: fundec %prec LOW  { $$ = A_FunctionDec(EM_tokPos, A_FundecList($1, N
 fundec: FUNCTION ID LPAREN tyfields RPAREN EQ exp          { $$ = A_Fundec(EM_tokPos, S_Symbol($2), $4, NULL, $7); }
       | FUNCTION ID LPAREN tyfields RPAREN COLON ID EQ exp { $$ = A_Fundec(EM_tokPos, S_Symbol($2), $4, S_Symbol($7), $9); }
 
-expseq: exp                  { $$ = A_ExpList($1, NULL); }
+expseq: {$$=NULL;}
+      | exp                  { $$ = A_ExpList($1, NULL); }
       | expseq SEMICOLON exp { $$ = A_ExpList($3, $1); }

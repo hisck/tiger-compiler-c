@@ -19,7 +19,9 @@ static S_symbol mksymbol(string name, S_symbol next) {
 static unsigned int hash(char *s0) {
   unsigned int h = 0;
   char *s;
-  for (s = s0; *s; s++) h = h * 65599 + *s;
+  for (s = s0; *s; s++) {
+    h = h * 65599 + *s;
+  }
   return h;
 }
 
