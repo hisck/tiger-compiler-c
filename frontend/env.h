@@ -4,6 +4,8 @@
 #include <stdio.h>
 
 #include "symbol.h"
+#include "temp.h"
+#include "translate.h"
 #include "types.h"
 #include "util.h"
 
@@ -13,20 +15,24 @@ struct E_enventry_ {
   enum { E_varEntry, E_funEntry } kind;
   union {
     struct {
+      Tr_access access;
       Ty_ty ty;
     } var;
     struct {
+      Tr_level level;
+      Temp_label label;
       Ty_tyList formals;
       Ty_ty results;
     } fun;
   } u;
 };
 
-/* constructor for value environment */
-E_enventry E_VarEntry(Ty_ty ty);
-E_enventry E_FunEntry(Ty_tyList formals, Ty_ty results);
+// constructor for value environment
+E_enventry E_VarEntry(Tr_access access, Ty_ty ty);
+E_enventry E_FunEntry(Tr_level level, Temp_label label, Ty_tyList formals,
+                      Ty_ty results);
 
-S_table E_base_tenv(); /* type environment */
-S_table E_base_venv(); /* value environment */
+S_table E_base_tenv();  // type environment
+S_table E_base_venv();  // value environment
 
 #endif
