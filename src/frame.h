@@ -1,10 +1,12 @@
-/* frame.h */
 #ifndef FRAME_H
 #define FRAME_H
 
+#include "assem.h"
 #include "temp.h"
 #include "tree.h"
 #include "util.h"
+
+extern const int F_WORD_SIZE;
 
 typedef struct F_frame_ *F_frame;
 typedef struct F_access_ *F_access;
@@ -15,21 +17,23 @@ struct F_accessList_ {
   F_accessList tail;
 };
 
-// 1. how the parameter will be seen from inside the function
-// 2. what instructions must be produced to implement the 'view shift'
-// such as: copy the stack pointer to frame pointer
+/**
+ * malloc a new frame
+ */
 F_frame F_newFrame(Temp_label name, U_boolList formals);
-
-// get the function name
+/**
+ * return frame's address
+ */
 Temp_label F_name(F_frame f);
-
-// extracts a list of k 'accesses' denoting the locations where the formal
-// parameters will be kept at run time
+/**
+ * fetch frame's formal list
+ */
 F_accessList F_formals(F_frame f);
-
+/**
+ * alloc a new local varibles in the frame
+ */
 F_access F_allocLocal(F_frame f, bool escape);
 
-// Translate module, fragment
 typedef struct F_frag_ *F_frag;
 struct F_frag_ {
   enum { F_stringFrag, F_procFrag } kind;
@@ -54,12 +58,38 @@ struct F_fragList_ {
 };
 F_fragList F_FragList(F_frag head, F_fragList tail);
 
-// IR-tree interface
-Temp_temp F_FP();
-extern const int F_WORD_SIZE;
+/**
+ * utils for translate module
+ */
 T_exp F_Exp(F_access acc, T_exp framePtr);
-T_stm F_procEntryExit1(F_frame frame, T_stm stm);
-
 T_exp F_externalCall(string s, T_expList args);
+
+/**
+ * MIPS calling convention
+ *
+ * the $v registers are for function returns,
+ * the $a registers are for function arguments,
+ * the $t variables are temporary caller saved registers,
+ * the $s registers are callee saved.
+ */
+
+Temp_map F_tempMap();
+
+/**
+ * normal register in mips
+ */
+Temp_temp F_FP();
+Temp_temp F_RV();
+Temp_temp F_RA();
+Temp_temp F_SP();
+Temp_temp F_ZERO();
+Temp_tempList F_CalleeSaves();
+Temp_tempList F_CallerSaves();
+Temp_tempList F_ArgsRegs();
+Temp_tempList F_CallSaves();
+
+T_stm F_procEntryExit1(F_frame frame, T_stm stm);
+AS_instrList F_procEntryExit2(AS_instrList body);
+AS_proc F_procEntryExit3(F_frame frame, AS_instrList body);
 
 #endif

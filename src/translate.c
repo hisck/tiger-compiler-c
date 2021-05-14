@@ -477,13 +477,13 @@ Tr_exp Tr_whileExp(Tr_exp test, Tr_exp done, Tr_exp body) {
 Tr_exp Tr_doWhileExp(Tr_exp body, Tr_exp test, Tr_exp done) {
   Temp_label test_label = Temp_newlabel(), body_label = Temp_newlabel();
   return Tr_Nx(T_Seq(
-      T_Jump(T_Name(test_label), Temp_LabelList(test_label, NULL)),
       T_Seq(
           T_Label(body_label),
           T_Seq(unNx(body), T_Seq(T_Label(test_label),
                                   T_Seq(T_Cjump(T_eq, unEx(test), T_Const(0),
                                                 unEx(done)->u.NAME, body_label),
-                                        T_Label(unEx(done)->u.NAME)))))));
+                                        T_Label(unEx(done)->u.NAME))))),
+      T_Jump(T_Name(test_label), Temp_LabelList(test_label, NULL))));
 }
 
 Tr_exp Tr_doneExp() {
@@ -526,6 +526,7 @@ F_fragList Tr_getResult() {
 }
 
 void Tr_printTree(Tr_exp e) {
-  T_stmList sl = T_StmList(unNx(e), NULL);
-  printStmList(stdout, sl);
+  T_stmList sl = C_linearize(unNx(e));
+  struct C_block b = C_basicBlocks(sl);
+  printStmList(stdout, C_traceSchedule(b));
 }

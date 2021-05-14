@@ -1,13 +1,5 @@
 #include "semant.h"
 
-#include <stdlib.h>
-
-#include "env.h"
-#include "errormsg.h"
-#include "translate.h"
-#include "types.h"
-#include "util.h"
-
 typedef struct expty_ {
   Tr_exp exp;
   Ty_ty ty;
@@ -54,6 +46,12 @@ F_fragList SEM_transProg(A_exp exp) {
   expty trans_exp = transExp(Tr_outermost(), venv, tenv, exp);
   Tr_printTree(trans_exp.exp);  // print the ir tree
   return Tr_getResult();
+}
+
+Tr_exp get_exp(A_exp exp) {
+  S_table venv = E_base_venv(), tenv = E_base_tenv();
+  expty trans_exp = transExp(Tr_outermost(), venv, tenv, exp);
+  return trans_exp.exp;
 }
 
 /**

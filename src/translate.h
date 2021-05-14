@@ -1,8 +1,12 @@
 #ifndef TRANSLATE_H_
 #define TRANSLATE_H_
 
+#include <stdlib.h>
+
 #include "absyn.h"
+#include "canon.h"
 #include "frame.h"
+#include "printtree.h"
 #include "temp.h"
 #include "tree.h"
 
