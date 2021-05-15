@@ -3,7 +3,10 @@
 
 #include <stdio.h>
 
+#include "symbol.h"
+#include "temp.h"
 #include "tree.h"
+#include "util.h"
 
 void printStmList(FILE *out, T_stmList stmList);
 
