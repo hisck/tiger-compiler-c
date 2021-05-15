@@ -103,7 +103,7 @@ int main(int argc, char *argv[]) {
 
   A_exp absyn_root = parse(input_file);
   if (absyn_root == NULL) {
-    fprintf(stderr, "something wrong with parser or file is empty\n");
+    fprintf(stderr, "cannot parse file\n");
     exit(0);
   }
 
