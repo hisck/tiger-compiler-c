@@ -1,7 +1,5 @@
 #include "escape.h"
 
-#include "symbol.h"
-
 typedef struct E_escentry_ *E_escentry;
 
 struct E_escentry_ {
@@ -75,7 +73,7 @@ static void traverseExp(S_table env, int depth, A_exp e) {
       traverseExp(env, depth, e->u.dowhilee.body);
       traverseExp(env, depth, e->u.dowhilee.test);
       return;
-
+      
     case A_forExp:
       S_enter(env, e->u.forr.var, EscEntry(&(e->u.forr.escape), depth));
       traverseExp(env, depth, e->u.forr.body);
@@ -102,7 +100,6 @@ static void traverseExp(S_table env, int depth, A_exp e) {
     default:
       return;
   }
-
   assert(0);
 }
 
