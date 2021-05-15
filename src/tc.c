@@ -104,7 +104,7 @@ int main(int argc, char *argv[]) {
   A_exp absyn_root = parse(input_file);
   if (absyn_root == NULL) {
     fprintf(stderr, "cannot parse file\n");
-    exit(0);
+    exit(1);
   }
 
   FILE *out = stdout;
