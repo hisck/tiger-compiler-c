@@ -1,7 +1,7 @@
 #include "frame.h"
 
-const int F_K =
-    6;  // maximum number of arguments that can be stored in register
+// maximum number of arguments that can be stored in register
+const int F_K = 6;
 const int F_WORD_SIZE = 4;  // MIPS's a WORD size is 4 bytes
 #define F_MAX_REGS 32       // MIPS32's maximum number of registers
 
@@ -42,11 +42,10 @@ F_frame F_newFrame(Temp_label name, U_boolList formals) {
   int offset = -F_WORD_SIZE;  // zero reserved for return address
 
   f->name = name;
-  f->formals =
-      F_AccessList(InFrame(offset), NULL);  // put in static link in the HEAD
+  // put in static link in the HEAD
+  f->formals = F_AccessList(InFrame(offset), NULL);
   f->locals = 1;
 
-  // to keep things easy, all variables are escaping...
   U_boolList b = NULL;
   F_accessList new_node = NULL, node = f->formals;
   for (b = formals->tail; b; b = b->tail) {
@@ -64,9 +63,8 @@ Temp_label F_name(F_frame f) { return f->name; }
 F_accessList F_formals(F_frame f) { return f->formals; }
 
 F_access F_allocLocal(F_frame f, bool escape) {
-  assert(f && escape);
   f->locals++;
-  return InFrame(-(f->locals * F_WORD_SIZE));
+  return escape ? InFrame(-(f->locals * F_WORD_SIZE)) : InReg(Temp_newtemp());
 }
 
 T_exp F_Exp(F_access acc, T_exp framePtr) {
@@ -152,7 +150,8 @@ static Temp_tempList F_spec_regs(int r[], int n) {
 }
 
 Temp_map F_tempMap() {
-  static Temp_map F_tempMap = NULL;  // registers' mapping
+  // registers' mapping
+  static Temp_map F_tempMap = NULL;
 
   if (regs[0] == NULL) {
     F_regs_init();
