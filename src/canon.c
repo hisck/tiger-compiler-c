@@ -222,7 +222,9 @@ static struct C_block global_block;
 
 static T_stmList getLast(T_stmList list) {
   T_stmList last = list;
-  while (last->tail->tail) last = last->tail;
+  while (last->tail->tail) {
+    last = last->tail;
+  }
   return last;
 }
 
