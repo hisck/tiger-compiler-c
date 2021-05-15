@@ -1,6 +1,8 @@
 #ifndef PRABSYN_H__
 #define PRABSYN_H__
 
+#include <stdio.h>
+
 #include "absyn.h"
 
 // function prototype from prabsyn.c
