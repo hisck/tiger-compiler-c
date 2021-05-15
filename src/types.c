@@ -87,3 +87,11 @@ void TyList_print(Ty_tyList list) {
     printf(")");
   }
 }
+
+static char error_str_ty[][12] = {"record", "nil",  "int", "string",
+                                  "array",  "name", "void"};
+
+char *Ty_ToString(Ty_ty t) {
+  if (t->kind == Ty_name) return S_name(t->u.name.sym);
+  return error_str_ty[t->kind];
+}

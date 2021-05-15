@@ -1,4 +1,5 @@
 #include <ctype.h>
+#include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -128,10 +129,13 @@ int main(int argc, char *argv[]) {
   }
   if (print_before_reg_alloc) {
     fprintf(out, "========== STRING LABELS ==========\n");
-    for (; string_frags; string_frags = string_frags->tail)
-      if (string_frags->head->kind == F_stringFrag)
+    for (; string_frags; string_frags = string_frags->tail) {
+      printf("entrou aqui");
+      if (string_frags->head->kind == F_stringFrag) {
         fprintf(out, "%s: %s\n\n", Temp_labelstring(Temp_newlabel()),
                 string_frags->head->u.stringg.str);
+      }
+    }
     fprintf(out, "========== END STRING LABELS ==========\n");
   }
   if (print_before_reg_alloc || print_canon) {

@@ -526,7 +526,39 @@ F_fragList Tr_getResult() {
 }
 
 void Tr_printTree(Tr_exp e) {
+  // T_stmList sl = T_StmList(unNx(e), NULL);
+  // printStmList(stdout, sl);
   T_stmList sl = C_linearize(unNx(e));
   struct C_block b = C_basicBlocks(sl);
   printStmList(stdout, C_traceSchedule(b));
+}
+
+Tr_exp Tr_eqStringExp(A_oper op, Tr_exp left, Tr_exp right) {
+  T_exp result =
+      F_externalCall(String("stringEqual"),
+                     T_ExpList(unEx(left), T_ExpList(unEx(right), NULL)));
+  if (op == A_eqOp)
+    return Tr_Ex(result);
+  else {
+    T_exp e = (result->kind == T_CONST && result->u.CONST == 1) ? T_Const(0)
+                                                                : T_Const(1);
+    return Tr_Ex(e);
+  }
+}
+
+Tr_exp Tr_eqExp(A_oper op, Tr_exp left, Tr_exp right) {
+  T_relOp oper;
+  if (op == A_eqOp)
+    oper = T_eq;
+  else
+    oper = T_ne;
+  T_stm cond = T_Cjump(oper, unEx(left), unEx(right), NULL, NULL);
+  patchList trues = PatchList(&cond->u.CJUMP.true, NULL);
+  patchList falses = PatchList(&cond->u.CJUMP.false, NULL);
+
+  return Tr_Cx(trues, falses, cond);
+}
+
+Tr_exp Tr_eqRef(A_oper op, Tr_exp left, Tr_exp right) {
+  return Tr_Ex(T_Const(0));
 }
