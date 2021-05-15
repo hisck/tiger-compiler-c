@@ -115,7 +115,7 @@ function sin(rad:int):int =
   while (rad > 2*PI) do
     rad := rad - 2 * PI;
   while (rad < -2*PI) do
-    rad = rad + 2 * PI;
+    rad := rad + 2 * PI;
   app := rad;
   diff := rad;
   diff := (diff * (-(rad*rad))) / ((2 * inc) * (2 * inc + 1));
@@ -262,4 +262,3 @@ in
   printint(x)
 
 end
-

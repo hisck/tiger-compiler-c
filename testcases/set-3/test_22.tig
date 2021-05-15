@@ -17,12 +17,12 @@ rec1.name := "sdf";
 
 rec2.name := "hello";
 
-if(true) then 
+if(1) then 
     print(rec1.name) 
 else 
     print(rec2.name);
 
-if(false) then 
+if(0) then 
     print(rec1.name) 
 else 
     print(rec2.name)

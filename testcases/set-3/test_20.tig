@@ -78,7 +78,7 @@ in
 	);
       flag := 1
     ) else if (not(flag)) then (
-      mid:=(l+ir) >> 1;
+      /* mid:=(l+ir) >> 1; */
       temp:=arr[mid];
       arr[mid]:=arr[l+1];
       arr[l+1]:=temp;
@@ -158,4 +158,3 @@ in
   printint(select(10, 20))
 
 end
-

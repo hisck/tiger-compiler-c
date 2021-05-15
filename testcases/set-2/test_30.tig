@@ -1,6 +1,2 @@
 /* write a program using your new construction */
-let
-var i:= 10
-in
-while true do (i+1;())
-end
+
