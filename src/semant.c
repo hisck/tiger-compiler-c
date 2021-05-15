@@ -44,7 +44,7 @@ static bool actual_eq(Ty_ty source, Ty_ty target) {
 F_fragList SEM_transProg(A_exp exp) {
   S_table venv = E_base_venv(), tenv = E_base_tenv();
   expty trans_exp = transExp(Tr_outermost(), venv, tenv, exp);
-  // Tr_printTree(trans_exp.exp);  // print the ir tree
+  Tr_procEntryExit(Tr_outermost(), trans_exp.exp, NULL);
   return Tr_getResult();
 }
 
@@ -65,16 +65,14 @@ static expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v) {
         return expTy(Tr_simpleVar(x->u.var.access, level),
                      actual_ty(x->u.var.ty));
       } else {
-        EM_error(v->pos, "simple var expression: undefined variable %s",
-                 S_name(v->u.simple));
+        EM_error(v->pos, "the variable %s is not defined", S_name(v->u.simple));
         exit(1);
       }
     }
     case A_fieldVar: {
       expty var = transVar(level, venv, tenv, v->u.field.var);
       if (var.ty->kind != Ty_record) {
-        EM_error(v->u.field.var->pos,
-                 "field var expression: not a record type variable");
+        EM_error(v->u.field.var->pos, "not a record type variable");
         exit(1);
       } else {
         Ty_fieldList fl = NULL;
@@ -84,8 +82,7 @@ static expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v) {
             return expTy(Tr_fieldVar(var.exp, offset), actual_ty(fl->head->ty));
           }
         }
-        EM_error(v->u.field.var->pos,
-                 "field var expression: no such field <%s> in the record",
+        EM_error(v->u.field.var->pos, "the field %s does not exist in record",
                  S_name(v->u.field.sym));
         exit(1);
       }
@@ -93,14 +90,12 @@ static expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v) {
     case A_subscriptVar: {
       expty var = transVar(level, venv, tenv, v->u.subscript.var);
       if (var.ty->kind != Ty_array) {
-        EM_error(v->u.subscript.var->pos,
-                 "subscript var expression: not an array type variable");
+        EM_error(v->u.subscript.var->pos, "not an array type variable");
         exit(1);
       } else {
         expty index = transExp(level, venv, tenv, v->u.subscript.exp);
         if (index.ty->kind != Ty_int) {
-          EM_error(v->u.subscript.exp->pos,
-                   "subscript var expression: integer required in array index");
+          EM_error(v->u.subscript.exp->pos, "array index's must be integers");
           exit(1);
         }
         return expTy(Tr_subscriptVar(var.exp, index.exp),
@@ -108,7 +103,7 @@ static expty transVar(Tr_level level, S_table venv, S_table tenv, A_var v) {
       }
     }
   }
-  assert(0);  // wrong kind
+  assert(0);
 }
 
 /**
@@ -127,8 +122,7 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
     case A_callExp: {
       E_enventry fun_entry = S_look(venv, e->u.call.func);
       if (!fun_entry || (fun_entry->kind != E_funEntry)) {
-        EM_error(e->pos, "call expression: undefined type %s",
-                 S_name(e->u.call.func));
+        EM_error(e->pos, "the type %s is undefiend", S_name(e->u.call.func));
         exit(1);
       } else {
         A_expList el = NULL;
@@ -139,15 +133,14 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
           expty exp = transExp(level, venv, tenv, el->head);
           Ty_ty actual = actual_ty(tl->head);
           if (!actual_eq(tl->head, exp.ty)) {
-            EM_error(
-                el->head->pos,
-                "call expression: argument type dosen't match the paramater");
+            EM_error(el->head->pos,
+                     "the type of the argument does not match the paramater");
             exit(1);
           }
           tr_el = Tr_ExpList(exp.exp, tr_el);
         }
         if (el) {
-          EM_error(el->head->pos, "call expression: too many arguments");
+          EM_error(el->head->pos, "too many arguments");
           exit(1);
         }
         if (tl) {
@@ -158,54 +151,77 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
                                 fun_entry->u.fun.label, tr_el),
                      actual_ty(fun_entry->u.fun.results));
       }
-    } /* callexp */
+    }
     case A_opExp: {
       expty left = transExp(level, venv, tenv, e->u.op.left);
       expty right = transExp(level, venv, tenv, e->u.op.right);
+      Tr_exp translation = Tr_noExp();
       switch (e->u.op.oper) {
         case A_plusOp:
         case A_minusOp:
         case A_timesOp:
         case A_divideOp: {
-          // operand must be integer, return value must be integer
           if (left.ty->kind != Ty_int)
-            EM_error(e->u.op.left->pos, "binary operation: integer required");
+            EM_error(e->u.op.left->pos,
+                     "integer required in binary operations");
           if (right.ty->kind != Ty_int)
-            EM_error(e->u.op.right->pos, "binary operation: integer required");
+            EM_error(e->u.op.right->pos,
+                     "integer required in binary operations");
           return expTy(Tr_arithExp(e->u.op.oper, left.exp, right.exp),
                        Ty_Int());
         }
         case A_eqOp:
         case A_neqOp: {
-          // can be applied to integers, strings, and two arrays or records
-          // be careful about records, because nil is also record-type
-          if (!actual_eq(left.ty, right.ty)) {
-            EM_error(e->pos, "operators compare: different type for compare");
-            return expTy(Tr_noExp(), Ty_Int());
+          switch (left.ty->kind) {
+            case Ty_int:
+              if (right.ty = left.ty)
+                translation = Tr_eqExp(e->u.op.oper, left.exp, right.exp);
+              break;
+            case Ty_string:
+              if (right.ty = left.ty)
+                translation = Tr_eqStringExp(e->u.op.oper, left.exp, right.exp);
+              break;
+            case Ty_array: {
+              if (right.ty->kind != left.ty->kind) {
+                EM_error(e->pos, "different type are being compared");
+              }
+              translation = Tr_eqRef(e->u.op.oper, left.exp, right.exp);
+              break;
+            }
+            case Ty_record: {
+              if (right.ty->kind != Ty_record && right.ty->kind != Ty_nil) {
+                EM_error(e->pos, "different type are being compared");
+              }
+              translation = Tr_eqRef(e->u.op.oper, left.exp, right.exp);
+              break;
+            }
+            default: {
+              EM_error(e->pos, "different type are being compared");
+            }
           }
-          return expTy(Tr_relExp(e->u.op.oper, left.exp, right.exp), Ty_Int());
+          return expTy(translation, Ty_Int());
         }
         case A_ltOp:
         case A_leOp:
         case A_gtOp:
         case A_geOp: {
           if (left.ty->kind != Ty_int || right.ty->kind != Ty_int) {
-            EM_error(e->pos, "binary compare: integer required");
+            EM_error(e->pos, "integer required in binary comparasion");
             return expTy(Tr_noExp(), Ty_Int());
           }
           return expTy(Tr_relExp(e->u.op.oper, left.exp, right.exp), Ty_Int());
         }
-      } /* switch */
-    }   /* A_opExp */
+      }
+    }
     case A_recordExp: {
       Ty_ty record_typ = S_look(tenv, e->u.record.typ);
       if (!record_typ) {
-        EM_error(e->pos, "record expression: undefined type");
+        EM_error(e->pos, "undefined type in record expression");
         return expTy(Tr_noExp(), Ty_Record(NULL));
       }
       Ty_ty actual = actual_ty(record_typ);
       if (actual->kind != Ty_record) {
-        EM_error(e->pos, "record expression: <%s> is not a record type",
+        EM_error(e->pos, "%s is not a record type in record expression",
                  S_name(e->u.record.typ));
         return expTy(Tr_noExp(), Ty_Record(NULL));
       }
@@ -216,13 +232,13 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
       for (fl = e->u.record.fields, ty_fl = actual->u.record; fl && ty_fl;
            fl = fl->tail, ty_fl = ty_fl->tail, n_fields++) {
         if (fl->head->name != ty_fl->head->name) {
-          EM_error(e->pos, "record expression: <%s> not a valid field name",
+          EM_error(e->pos, "%s is not a valid field name in record expression",
                    S_name(fl->head->name));
           return expTy(Tr_noExp(), Ty_Record(NULL));
         }
         expty exp = transExp(level, venv, tenv, fl->head->exp);
         if (!actual_eq(exp.ty, ty_fl->head->ty)) {
-          EM_error(e->pos, "record expression: both field types dismatch");
+          EM_error(e->pos, "both field types dismatch in record expression");
           return expTy(Tr_noExp(), Ty_Record(NULL));
         }
         tr_el = Tr_ExpList(exp.exp, tr_el);
@@ -281,7 +297,7 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
       expty test = transExp(level, venv, tenv, e->u.whilee.test);
       if (test.ty->kind != Ty_int) {
         EM_error(e->u.whilee.test->pos,
-                 "while loop: test section must produce integer");
+                 "test block must produce integer in while loop");
         exit(1);
       }
       inside++;  // inside loop
@@ -325,9 +341,6 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
        * in
        *     while i <= limit do (body; i := i + 1)
        * end
-       *
-       * tip: 你可以使用前面的 prabsyn 将上述打印出来
-       * note: 使用这样的转化可以省很多事 我之前直接使用for语句很麻烦
        */
       A_dec i = A_VarDec(e->pos, e->u.forr.var, NULL, e->u.forr.lo);
       A_dec limit = A_VarDec(e->pos, S_Symbol("limit"), NULL, e->u.forr.hi);
@@ -352,7 +365,7 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
     }
     case A_breakExp: {
       if (!inside) {
-        EM_error(e->pos, "break expression: break expression outside loop");
+        EM_error(e->pos, "break expression outside loop");
         exit(1);
       }
       return expTy(Tr_breakExp(brk[inside]), Ty_Void());
@@ -374,34 +387,33 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
     case A_arrayExp: {
       Ty_ty array_typ = S_look(tenv, e->u.array.typ);
       if (!array_typ) {
-        EM_error(e->pos, "array expression: undefined type %s",
+        EM_error(e->pos, "undefined type %s in array expression",
                  S_name(e->u.array.typ));
         exit(1);
       }
       Ty_ty actual = actual_ty(array_typ);
       if (actual->kind != Ty_array) {
         EM_error(e->pos,
-                 "array expression: array type required but given another %s",
+                 "array type required but %s was given in array expression",
                  S_name(e->u.array.typ));
         exit(1);
       }
       expty size_typ = transExp(level, venv, tenv, e->u.array.size);
       if (size_typ.ty->kind != Ty_int) {
         EM_error(e->u.array.size->pos,
-                 "array expression: integer required with array size");
+                 "integer required with array size in array expression");
         exit(1);
       }
       expty init_typ = transExp(level, venv, tenv, e->u.array.init);
       if (!actual_eq(init_typ.ty, actual->u.array)) {
-        EM_error(
-            e->u.array.init->pos,
-            "array expression: initialize type does not match with given type");
+        EM_error(e->u.array.init->pos,
+                 "initialize type does not match with given type");
         exit(1);
       }
       return expTy(Tr_arrayExp(size_typ.exp, init_typ.exp), actual);
     }
   }
-  assert(0);  // should have returned from some clause of the switch
+  assert(0);
 }
 
 /**
@@ -419,7 +431,7 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
       if (d->u.var.typ != NULL) {
         dec_ty = S_look(tenv, d->u.var.typ);
         if (!dec_ty) {
-          EM_error(d->pos, "variable declare: undefined type %s",
+          EM_error(d->pos, "type not defined %s in variable declare",
                    S_name(d->u.var.typ));
           exit(1);
         }
@@ -428,21 +440,18 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
       // check declare type and initialize expression equal
       if (dec_ty != NULL) {
         if (!actual_eq(dec_ty, init_exp.ty)) {
-          EM_error(
-              d->pos,
-              "variable declare: dismatch type between declare and initialze");
+          EM_error(d->pos, "dismatch type between declare and initialze");
           exit(1);
         }
       } else {
         if (init_exp.ty->kind == Ty_nil) {
           EM_error(d->pos,
-                   "variable declare: illegal nil type: nil must be assign to "
-                   "a explictly record type");
+                   "illegal nil type: nil must be assigned to a "
+                   "explictly record type");
           exit(1);
         }
       }
-      Tr_access m_access = Tr_allocLocal(
-          level, TRUE);  // to keep things easy, all vars are escaping
+      Tr_access m_access = Tr_allocLocal(level, d->u.var.escape);
       S_enter(venv, d->u.var.var, E_VarEntry(m_access, init_exp.ty));
       return Tr_assignExp(Tr_simpleVar(m_access, level), init_exp.exp);
     }
@@ -450,27 +459,24 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
       A_nametyList type_list = NULL;
       bool cycle_decl = TRUE;
       int index = 0;
-      void *typenames[10];  // store typenames in list, check for redeclaration
+      // store typenames in list, check for redeclaration
+      void *typenames[10];
 
-      // example: type list = { first: int, rest: list }
-      // 1: add header (type list =) into environment e1
       for (type_list = d->u.type; type_list; type_list = type_list->tail) {
         S_enter(tenv, type_list->head->name,
                 Ty_Name(type_list->head->name, NULL));
         for (int i = 0; i < index; i++) {
           if (typenames[i] == (void *)type_list->head->name) {
             EM_error(type_list->head->ty->pos,
-                     "type declare: redeclaration type <%s>, there are two "
-                     "types with the same name in the same (consecutive) batch "
-                     "of mutually recursive types.",
+                     "redeclaration type %s, there are two types with the same "
+                     "name while type declaring",
                      S_name(type_list->head->name));
             exit(1);
           }
         }
         typenames[index++] = (void *)type_list->head->name;
       }
-      // 2: translate body ({ first: int, rest: list }) to fill the place-holder
-      // in the e1
+
       for (type_list = d->u.type; type_list; type_list = type_list->tail) {
         Ty_ty t = transTy(tenv, type_list->head->ty);
         Ty_ty name_type = S_look(tenv, type_list->head->name);
@@ -479,8 +485,8 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
       }
       if (cycle_decl) {
         EM_error(d->pos,
-                 "type declare: illegal cycle type declaration: must contain "
-                 "at least one built-in type");
+                 "cycle type declaration is illegal, must contain at "
+                 "least one built-in type in type declare");
         exit(1);
       }
       return Tr_noExp();
@@ -488,12 +494,9 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
     case A_functionDec: {
       A_fundecList fun_list = NULL;
       int index = 0;
-      void *typenames[10];  // store typenames in list, check for redeclaration
+      void *typenames[10];
 
-      // example: function treeLeaves(t: tree): int = treelistLeaves(t.children)
-      // 1: add header (function treeLeaves(t: tree): int =)
       for (fun_list = d->u.function; fun_list; fun_list = fun_list->tail) {
-        // i need elements of E_FunEntry, because its value environment
         A_fieldList fl = NULL;
         Ty_ty ty = NULL;
 
@@ -508,7 +511,7 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
           r = S_look(tenv, fun_list->head->result);
           if (!r) {
             EM_error(fun_list->head->pos,
-                     "function declare: undefined return type %s",
+                     "return type is undefined %s in function declare",
                      S_name(fun_list->head->result));
             exit(1);
           }
@@ -520,7 +523,7 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
           ty = S_look(tenv, fl->head->typ);
           if (!ty) {
             EM_error(fl->head->pos,
-                     "function declare: undefined parameter type %s",
+                     "parameter type not defined %s in function declare",
                      S_name(fl->head->typ));
             exit(1);
           }
@@ -532,8 +535,7 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
             tail = head;
           }
           if (m_head) {
-            m_tail->tail = U_BoolList(
-                TRUE, NULL);  // to keep things easy, vars are escaping
+            m_tail->tail = U_BoolList(TRUE, NULL);
             m_tail = m_tail->tail;
           } else {
             m_head = U_BoolList(TRUE, NULL);
@@ -541,7 +543,8 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
           }
         }
 
-        // 遇到function declaration需要在当前level上创建一个新的level
+        // function declaration -> need to create a new level at the current
+        // level
         Temp_label m_label = Temp_newlabel();
         Tr_level m_level = Tr_newLevel(level, m_label, m_head);
         S_enter(venv, fun_list->head->name,
@@ -550,16 +553,15 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
         for (int i = 0; i < index; i++) {
           if (typenames[i] == (void *)fun_list->head->name) {
             EM_error(fun_list->head->pos,
-                     "type declare: redeclaration type <%s>, there are two "
-                     "types with the same name in the same (consecutive) batch "
-                     "of mutually recursive types.",
+                     "redeclaration type %s, there are two type with the same "
+                     "name in type declare",
                      S_name(fun_list->head->name));
             exit(1);
           }
         }
         typenames[index++] = (void *)fun_list->head->name;
       }
-      // 2: translate body (treelistLeaves(t.children))
+      // 2: translate body
       for (fun_list = d->u.function; fun_list; fun_list = fun_list->tail) {
         E_enventry fun_entry = S_look(venv, fun_list->head->name);
         S_beginScope(venv);
@@ -577,10 +579,11 @@ static Tr_exp transDec(Tr_level level, S_table venv, S_table tenv, A_dec d) {
         // compare return type and body type
         if (!actual_eq(fun_entry->u.fun.results, exp.ty)) {
           EM_error(d->pos,
-                   "function declare: body type and return type with <%s>",
+                   "block type and return type with %s in function declare",
                    S_name(fun_list->head->name));
           exit(1);
         }
+        Tr_procEntryExit(fun_entry->u.fun.level, exp.exp, m_accessList);
         S_endScope(venv);
       }
       return Tr_noExp();
@@ -596,7 +599,7 @@ static Ty_ty transTy(S_table tenv, A_ty t) {
     case A_nameTy: {
       Ty_ty ty = S_look(tenv, t->u.name);
       if (!ty) {
-        EM_error(t->pos, "translate name type: undefined type %s",
+        EM_error(t->pos, "type not defined %s in translate name type",
                  S_name(t->u.name));
         exit(1);
       }
@@ -610,7 +613,7 @@ static Ty_ty transTy(S_table tenv, A_ty t) {
       for (fl = t->u.record; fl; fl = fl->tail) {
         ty = S_look(tenv, fl->head->typ);
         if (!ty) {
-          EM_error(fl->head->pos, "translate record type: undefined type %s",
+          EM_error(fl->head->pos, "type not defined %s in translate record",
                    S_name(fl->head->typ));
           exit(1);
         }
@@ -628,12 +631,12 @@ static Ty_ty transTy(S_table tenv, A_ty t) {
     case A_arrayTy: {
       Ty_ty ty = S_look(tenv, t->u.array);
       if (!ty) {
-        EM_error(t->pos, "translate array type: undefined type %s",
+        EM_error(t->pos, "type not defined %s in translate array",
                  S_name(t->u.array));
         exit(1);
       }
       return Ty_Array(ty);
     }
   }
-  assert(0);  // should have returned from some clause of the switch
+  assert(0);
 }
