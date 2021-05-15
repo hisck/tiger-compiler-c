@@ -2,6 +2,7 @@
 #define ABSYN_H__
 
 #include "symbol.h"
+#include "util.h"
 
 // Type Definitions
 

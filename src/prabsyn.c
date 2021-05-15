@@ -1,10 +1,5 @@
 #include "prabsyn.h"
 
-#include <stdio.h>
-
-#include "symbol.h"
-#include "util.h"
-
 /* local function prototypes */
 static void pr_var(FILE *out, A_var v, int d);
 static void pr_dec(FILE *out, A_dec v, int d);

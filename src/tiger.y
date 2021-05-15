@@ -79,7 +79,7 @@ A_exp absyn_root;
 
 %%
 
-program: exp { absyn_root = $1; }
+program: exp { absyn_root = $1; } | {absyn_root = NULL ;}
 
 exp: lvalue { $$ = A_VarExp(EM_tokPos, $1); }
    | NIL    { $$ = A_NilExp(EM_tokPos); }
