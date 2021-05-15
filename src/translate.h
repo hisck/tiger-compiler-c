@@ -1,6 +1,7 @@
 #ifndef TRANSLATE_H_
 #define TRANSLATE_H_
 
+#include <stdio.h>
 #include <stdlib.h>
 
 #include "absyn.h"
@@ -58,6 +59,9 @@ Tr_exp Tr_doneExp();
 Tr_exp Tr_breakExp(Tr_exp brk);
 Tr_exp Tr_letExp(Tr_expList exps);
 Tr_exp Tr_arrayExp(Tr_exp size, Tr_exp init);
+Tr_exp Tr_eqExp(A_oper op, Tr_exp left, Tr_exp right);
+Tr_exp Tr_eqStringExp(A_oper op, Tr_exp left, Tr_exp right);
+Tr_exp Tr_eqRef(A_oper op, Tr_exp left, Tr_exp right);
 
 // Print IR TREE
 void Tr_printTree(Tr_exp e);
