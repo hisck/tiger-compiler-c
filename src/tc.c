@@ -130,7 +130,6 @@ int main(int argc, char *argv[]) {
   if (print_before_reg_alloc) {
     fprintf(out, "========== STRING LABELS ==========\n");
     for (; string_frags; string_frags = string_frags->tail) {
-      printf("entrou aqui");
       if (string_frags->head->kind == F_stringFrag) {
         fprintf(out, "%s: %s\n\n", Temp_labelstring(Temp_newlabel()),
                 string_frags->head->u.stringg.str);
