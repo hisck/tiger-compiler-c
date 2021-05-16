@@ -67,10 +67,10 @@ function binary_search(x:int): int =
           fvalue := data[mid].value
        )
        else  /* not found */
-          if ( data[mid].key > x ) then
+          (if ( data[mid].key > x ) then
 	     up := mid - 1
           else
-	     low := mid + 1
+	     low := mid + 1)
     );
     fvalue
   end

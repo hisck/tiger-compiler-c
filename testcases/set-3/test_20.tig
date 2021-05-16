@@ -77,7 +77,7 @@ in
 	  
 	);
       flag := 1
-    ) else if (not(flag)) then (
+    ) else (if (not(flag)) then (
       /* mid:=(l+ir) >> 1; */
       temp:=arr[mid];
       arr[mid]:=arr[l+1];
@@ -117,7 +117,7 @@ in
       arr[j]:=a;
       if (j >= k) then ir:=j-1;
       if (j <= k) then l:=i
-    )
+    ))
 
   );
   arr[k]
