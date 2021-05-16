@@ -34,7 +34,7 @@ static void do_proc(FILE *out, F_frame frame, T_stm body) {
   if (print_canon) {
     printStmList(out, stm_l);
   }
-
+  
   instr_l = F_codegen(frame, stm_l);
   if (print_before_reg_alloc) {
     AS_printInstrList(out, instr_l, F_tempMap());
@@ -118,7 +118,7 @@ int main(int argc, char *argv[]) {
 
   F_fragList frags = SEM_transProg(absyn_root);
   if (EM_anyErrors) {
-    exit(0);
+    exit(1);
   }
   F_fragList string_frags = frags;
 
@@ -129,12 +129,10 @@ int main(int argc, char *argv[]) {
   }
   if (print_before_reg_alloc) {
     fprintf(out, "========== STRING LABELS ==========\n");
-    for (; string_frags; string_frags = string_frags->tail) {
-      if (string_frags->head->kind == F_stringFrag) {
+    for (; string_frags; string_frags = string_frags->tail)
+      if (string_frags->head->kind == F_stringFrag)
         fprintf(out, "%s: %s\n\n", Temp_labelstring(Temp_newlabel()),
                 string_frags->head->u.stringg.str);
-      }
-    }
     fprintf(out, "========== END STRING LABELS ==========\n");
   }
   if (print_before_reg_alloc || print_canon) {
