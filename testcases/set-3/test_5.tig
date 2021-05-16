@@ -1,1 +1,38 @@
 /* print the max value in a array of int */
+let
+    type arrtype = array of int
+    var lst: arrtype := arrtype [10] of 0
+    var tam := 10
+
+    function printint(i: int) =
+        let function f(i:int) = if i>0 
+             then (f(i/10); print(chr(i-i/1010+ord("0"))))
+        in if i<0 then (print("-"); f(-i))
+            else if i>0 then f(i)
+            else print("0")
+        end
+
+    function populate(lst: arrtype, tam: int) =
+        let 
+            var c := 0
+        in
+            for i := 0 to tam do
+                lst[i] := c; c := c+1;
+        end
+
+
+    function findmax(lst: arrtype, tam: int): int = 
+        let
+            var max := lst[0]
+        in
+            for i := 0 to tam do
+                if lst[i] > max then
+                    max := lst[i];
+
+            max
+        end
+
+
+in 
+    printint(findmax(lst, tam))
+end
