@@ -45,3 +45,10 @@ Usage:
 ```bash
 cd testcases/ && ./suite_test.sh
 ```
+
+## References
+
+The implementation of this compiler started from codes already made available by the community and by the author, adding only the structure, making adjustments in the language and correcting bugs. You can find the original codes at:
+
+1. [Tiger compiler modules for programming exercises](https://www.cs.princeton.edu/~appel/modern/c/project.html)
+2. [travmygit/TigerCompiler](https://github.com/travmygit/TigerCompiler)
