@@ -210,7 +210,6 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
             }
           }
           return expTy(translation, Ty_Int());
-
         case A_gtOp:
         case A_ltOp:
         case A_leOp:
