@@ -34,7 +34,7 @@ static void do_proc(FILE *out, F_frame frame, T_stm body) {
   if (print_canon) {
     printStmList(out, stm_l);
   }
-  
+
   instr_l = F_codegen(frame, stm_l);
   if (print_before_reg_alloc) {
     AS_printInstrList(out, instr_l, F_tempMap());
@@ -100,7 +100,10 @@ int main(int argc, char *argv[]) {
         break;
     }
   }
-
+  if (print_before_reg_alloc && print_canon) {
+    printf("The -c and -s options cannot be used at the same time\n");
+    exit(1);
+  }
   A_exp absyn_root = parse(input_file);
   if (absyn_root == NULL) {
     fprintf(stderr, "cannot parse file\n");
@@ -109,9 +112,11 @@ int main(int argc, char *argv[]) {
 
   FILE *out = stdout;
   if (print_absyn_tree) {
-    fprintf(out, "========== Absyn Tree ==========\n");
+    fprintf(out, "##########################################\n");
+    fprintf(out, "#                Absyn Tree              #\n");
+    fprintf(out, "##########################################\n");
     pr_exp(out, absyn_root, 0);
-    fprintf(out, "\n========== End ==========\n\n");
+    fprintf(out, "\n##########################################\n");
   }
 
   Esc_findEscape(absyn_root);
@@ -123,18 +128,20 @@ int main(int argc, char *argv[]) {
   F_fragList string_frags = frags;
 
   if (print_ir_tree) {
-    fprintf(out, "========== IR Tree ==========\n");
+    fprintf(out, "##########################################\n");
+    fprintf(out, "#                 IR Tree                #\n");
+    fprintf(out, "##########################################\n");
     Tr_printTree(get_exp(absyn_root));
-    fprintf(out, "\n========== End ==========\n\n");
+    fprintf(out, "\n##########################################\n");
   }
-  if (print_before_reg_alloc) {
-    fprintf(out, "========== STRING LABELS ==========\n");
-    for (; string_frags; string_frags = string_frags->tail)
-      if (string_frags->head->kind == F_stringFrag)
-        fprintf(out, "%s: %s\n\n", Temp_labelstring(Temp_newlabel()),
-                string_frags->head->u.stringg.str);
-    fprintf(out, "========== END STRING LABELS ==========\n");
-  }
+  // if (print_before_reg_alloc) {
+  //   fprintf(out, "========== STRING LABELS ==========\n");
+  //   for (; string_frags; string_frags = string_frags->tail)
+  //     if (string_frags->head->kind == F_stringFrag)
+  //       fprintf(out, "%s: %s\n\n", Temp_labelstring(Temp_newlabel()),
+  //               string_frags->head->u.stringg.str);
+  //   fprintf(out, "========== END STRING LABELS ==========\n");
+  // }
   if (print_before_reg_alloc || print_canon) {
     for (; frags; frags = frags->tail)
       if (frags->head->kind == F_procFrag)
