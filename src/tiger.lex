@@ -126,7 +126,6 @@ void adjust(void) {
 
   /* comment part */
 "/*" {adjust(); comment_level+=1; BEGIN COMMENT;}
-[^\n] {adjust();}
 (\n|\r\n)    {adjust(); EM_newline();}
 <COMMENT>"*/" {adjust(); comment_level-=1; if(comment_level==0) BEGIN 0;}
 <COMMENT><<EOF>> {adjust(); EM_error(EM_tokPos,"unclose comment"); yyterminate();}
