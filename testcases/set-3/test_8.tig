@@ -1,1 +1,17 @@
 /* create a list of strings, concatenate all e then print the frase. */
+let
+	type array_strings = array of string
+	var arr := array_strings [3] of "a"
+
+	function concatenate_strings(arr : array_strings, tam: int) : string =
+	let
+		var result := " "
+	in
+		for i := 0 to tam do (
+			result := concat(result, arr[i])
+		);
+		result
+	end
+in
+  print(concatenate_strings(arr, 3))
+end
