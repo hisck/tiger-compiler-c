@@ -1,1 +1,25 @@
 /* verify if a substring exists, print true if such substring exists otherwise false */
+let
+  var a := "Lorem ipsum dolor sit amet"
+  var b := "Lorem"
+
+  function is_substring(a: string, b: string, tam: int ) : int = 
+  let
+    var result := 0 
+    var str := " "
+  in
+    for i := 0 to tam - 1 do (
+      str := substring(a, 0, i);
+      if str = b then 
+        result := 1
+      else
+        result := 0;
+    );
+    result
+  end
+in
+  if is_substring(a,b, 26) then
+    print("True")
+  else
+    print("False")
+end
