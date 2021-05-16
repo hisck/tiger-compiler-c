@@ -1,1 +1,22 @@
 /* buble sort - array with 10 integer */
+let 
+    type array_numbers = array of int
+    var arr := array_numbers [10] of 1
+
+    function bubble_sort(arr : array_numbers, tam: int) =
+        let
+            var aux := 0
+        in
+            for i := 0 to tam do (
+                for j := 0 to ((tam -i) - 1) do
+                (
+                    if arr[j] > arr[j+1] then
+                    aux := arr[j+1];
+                    arr[j+1] = arr[j];
+                    arr[j] = aux;
+                );
+            );
+        end
+in
+    bubble_sort(arr, 10)
+end
