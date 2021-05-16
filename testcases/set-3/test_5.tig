@@ -17,7 +17,8 @@ let
             var c := 0
         in
             for i := 0 to tam do
-                lst[i] := c; c := c+1;
+                lst[i] := c;
+								c := c+1;
         end
 
 
