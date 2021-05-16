@@ -122,7 +122,7 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
     case A_callExp: {
       E_enventry fun_entry = S_look(venv, e->u.call.func);
       if (!fun_entry || (fun_entry->kind != E_funEntry)) {
-        EM_error(e->pos, "the type %s is undefiend", S_name(e->u.call.func));
+        EM_error(e->pos, "the type %s is undefined", S_name(e->u.call.func));
         exit(1);
       } else {
         A_expList el = NULL;
@@ -144,7 +144,7 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
           exit(1);
         }
         if (tl) {
-          EM_error(e->pos, "call expression: not enough arguments");
+          EM_error(e->pos, "not enough arguments for call expression");
           exit(1);
         }
         return expTy(Tr_callExp(level, fun_entry->u.fun.level,
@@ -187,7 +187,8 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
             }
             case Ty_array: {
               if (right.ty->kind != left.ty->kind) {
-                EM_error(e->u.op.right->pos, "%s expression given; expected %s",
+                EM_error(e->u.op.right->pos,
+                         "expected %s but %s expression given",
                          Ty_ToString(right.ty), Ty_ToString(left.ty));
               }
               translation = Tr_eqRef(oper, left.exp, right.exp);
@@ -205,7 +206,7 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
             }
             default: {
               EM_error(e->u.op.right->pos,
-                       "unexpected %s expression in comparsion",
+                       "unexpected %s expression in comparison",
                        Ty_ToString(right.ty));
             }
           }
@@ -215,7 +216,7 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
         case A_leOp:
         case A_geOp: {
           if (right.ty->kind != left.ty->kind) {
-            EM_error(e->pos, "integer required in binary comparasion");
+            EM_error(e->pos, "integer required in binary comparison");
           }
           switch (left.ty->kind) {
             case Ty_int:
@@ -283,9 +284,9 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
       expty var = transVar(level, venv, tenv, e->u.assign.var);
       expty exp = transExp(level, venv, tenv, e->u.assign.exp);
       if (!actual_eq(var.ty, exp.ty)) {
-        EM_error(
-            e->pos,
-            "assign expression: dismatch type between variable and expression");
+        EM_error(e->pos,
+                 "dismatch type between variable and expression in assign "
+                 "expression");
         exit(1);
       }
       return expTy(Tr_assignExp(var.exp, exp.exp), Ty_Void());
@@ -293,22 +294,23 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
     case A_ifExp: {
       expty test = transExp(level, venv, tenv, e->u.iff.test);
       if (test.ty->kind != Ty_int) {
-        EM_error(e->pos, "condition expression: test section must be integer");
+        EM_error(e->pos,
+                 "test section must be integer in condition expression");
         exit(1);
       }
       expty then = transExp(level, venv, tenv, e->u.iff.then);
       if (e->u.iff.elsee) {
         expty elsee = transExp(level, venv, tenv, e->u.iff.elsee);
         if (!actual_eq(then.ty, elsee.ty)) {
-          EM_error(
-              e->pos,
-              "condition expression: then-else section must be the same type");
+          EM_error(e->pos,
+                   "then-else section must be the same type in condition "
+                   "expression");
           exit(1);
         }
         return expTy(Tr_ifExp(test.exp, then.exp, elsee.exp), then.ty);
       } else {
         if (then.ty->kind != Ty_void) {
-          EM_error(e->pos, "condition expression: then section must be void");
+          EM_error(e->pos, "then section must be void in condition expression");
           exit(1);
         }
         return expTy(Tr_ifExp(test.exp, then.exp, NULL), Ty_Void());
@@ -328,7 +330,7 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
       inside--;  // outside
       if (body.ty->kind != Ty_void) {
         EM_error(e->u.whilee.body->pos,
-                 "while loop: body section must produce no value");
+                 "body section must produce no value in while loop");
         exit(1);
       }
       return expTy(Tr_whileExp(test.exp, done, body.exp), Ty_Void());
@@ -340,13 +342,13 @@ static expty transExp(Tr_level level, S_table venv, S_table tenv, A_exp e) {
       inside--;  // outside
       if (body.ty->kind != Ty_void) {
         EM_error(e->u.dowhilee.body->pos,
-                 "while loop: body section must produce no value");
+                 "body section must produce no value in while loop");
         exit(1);
       }
       expty test = transExp(level, venv, tenv, e->u.dowhilee.test);
       if (test.ty->kind != Ty_int) {
         EM_error(e->u.dowhilee.test->pos,
-                 "while loop: test section must produce integer");
+                 "test section must produce integer in while loop");
         exit(1);
       }
       return expTy(Tr_doWhileExp(body.exp, test.exp, done), Ty_Void());
