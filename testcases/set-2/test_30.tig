@@ -1,2 +1,8 @@
 /* write a program using your new construction */
-
+let
+	var i:= 10
+in
+	do {
+		i := i+1
+	} while (i < 12)
+end
