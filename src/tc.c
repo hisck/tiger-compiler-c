@@ -143,6 +143,15 @@ int main(int argc, char *argv[]) {
   //   fprintf(out, "========== END STRING LABELS ==========\n");
   // }
   if (print_before_reg_alloc || print_canon) {
+    if (print_before_reg_alloc) {
+      fprintf(out, "##########################################\n");
+      fprintf(out, "#                Assembly                #\n");
+      fprintf(out, "##########################################\n");
+    } else {
+      fprintf(out, "##########################################\n");
+      fprintf(out, "#                 Canon                  #\n");
+      fprintf(out, "##########################################\n");
+    }
     for (; frags; frags = frags->tail)
       if (frags->head->kind == F_procFrag)
         do_proc(out, frags->head->u.proc.frame, frags->head->u.proc.body);
